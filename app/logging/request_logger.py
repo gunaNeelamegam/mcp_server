@@ -18,13 +18,12 @@ _logger = logging.getLogger("logistics_ai.requests")
 
 
 def configure() -> None:
-    if _logger.handlers:
+    """Sets up root logging once so every `logistics_ai.*` logger (this
+    module's structured events, access logs, grounding warnings, ...)
+    shares one stdout sink and level, configured from app.config."""
+    if logging.getLogger().handlers:
         return
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter("%(message)s"))
-    _logger.addHandler(handler)
-    _logger.setLevel(get_settings().log_level)
-    _logger.propagate = False
+    logging.basicConfig(stream=sys.stdout, level=get_settings().log_level, format="%(message)s")
 
 
 def _emit(event: str, request_id: str | None, **fields: Any) -> None:

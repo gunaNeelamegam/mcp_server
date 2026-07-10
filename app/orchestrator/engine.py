@@ -2,6 +2,7 @@
 branching anywhere in here. Never imports a specific model SDK, MCP
 client, or vector DB library directly, only interfaces/registries."""
 import uuid
+from collections.abc import AsyncIterator
 from typing import Any
 
 from app import glossary
@@ -18,14 +19,6 @@ from app.rag import registry as rag_registry
 from app.rag import router as rag_router
 
 _NO_DOCS_ANSWER = "I don't have documentation on this — you may want to check with the team."
-
-# Below this, a retrieved chunk is treated as noise rather than a real hit —
-# without it, an unrelated top-k result (e.g. a Bahrain question surfacing a
-# UAE doc because nothing else scored higher) would count as "found docs" and
-# get fed into the model's context. Calibrated for dense/hybrid's ~0-1
-# normalized scores (see SKILL.md's default search strategy); a pure-keyword
-# deployment uses raw BM25 scores and would need this recalibrated.
-_MIN_RELEVANCE_SCORE = 0.2
 
 
 def _build_system_prompt(chunks: list[dict[str, Any]]) -> str:
@@ -64,9 +57,8 @@ async def handle_question(
     chunks: list[dict[str, Any]] = []
     for domain in decision.domains:
         result = await rag_registry.get(domain).search(question, filters=tags)
-        relevant = [chunk for chunk in result if chunk["score"] >= _MIN_RELEVANCE_SCORE]
-        chunks += relevant
-        logger.log_rag_query(request_id, domain, question, relevant)
+        chunks += result
+        logger.log_rag_query(request_id, domain, question, result)
 
     # 3. Grounding check — if a domain we're confident applies has zero hits, say so explicitly
     if rag_router.expected_domain_but_no_hits(decision, chunks):
@@ -166,3 +158,105 @@ async def _run_loop(
         messages.append({"role": "assistant", "content": "", "tool_call": {"id": call_id, "name": result["tool"], "args": result["args"]}})
         messages.append({"role": "tool", "tool_call_id": call_id, "content": tool_result})
         # loop again — model sees tool result, may call another tool or return final answer
+
+
+async def handle_question_stream(
+    user_id: str,
+    question: str,
+    tags: dict[str, Any] | None = None,
+    request_id: str | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    """Same steps as handle_question, but yields incremental
+    {"type": "text_delta", "text": str} events as the final answer is
+    generated, followed by exactly one terminal event shaped like
+    handle_question's return value. Tool-calling turns are not streamed
+    token-by-token (their content is empty until the decision is made) —
+    only the model's concluding turn streams to the client."""
+    request_id = request_id or str(uuid.uuid4())
+    tags = tags or {}
+    role = auth.get_role(user_id)
+
+    decision = rag_router.route(question, tags)
+    decision = rag_router.RoutingDecision(
+        domains=auth.filter_domains(role, decision.domains), confident=decision.confident
+    )
+
+    chunks: list[dict[str, Any]] = []
+    for domain in decision.domains:
+        result = await rag_registry.get(domain).search(question, filters=tags)
+        chunks += result
+        logger.log_rag_query(request_id, domain, question, result)
+
+    if rag_router.expected_domain_but_no_hits(decision, chunks):
+        yield {"type": "final_answer", "text": _NO_DOCS_ANSWER, "sources": [], "request_id": request_id}
+        return
+
+    session_store = get_session_store()
+    history = await session_store.get_history(user_id)
+    messages = [*history, {"role": "system", "content": _build_system_prompt(chunks)}, {"role": "user", "content": question}]
+
+    mcp_registry = await get_mcp_registry()
+    tools = auth.filter_tools(role, mcp_registry.all_tool_schemas())
+
+    provider = get_model_provider()
+    async for event in _run_loop_stream(
+        provider, mcp_registry, session_store, messages, tools, chunks, user_id, question, request_id
+    ):
+        yield event
+
+
+async def _run_loop_stream(
+    provider: ModelProvider,
+    mcp_registry: McpRegistry,
+    session_store: SessionStore,
+    messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]],
+    chunks: list[dict[str, Any]],
+    user_id: str,
+    question: str,
+    request_id: str,
+) -> AsyncIterator[dict[str, Any]]:
+    while True:
+        stream = await provider.generate(messages, tools, stream=True)
+        terminal: dict[str, Any] | None = None
+        async for event in stream:
+            if event["type"] == "text_delta":
+                yield event
+            else:
+                terminal = event
+        logger.log_model_call(request_id, messages, terminal)
+
+        if terminal["type"] == "final_answer":
+            grounding.verify(terminal["text"], chunks)
+            await session_store.append(user_id, {"role": "user", "content": question})
+            await session_store.append(user_id, {"role": "assistant", "content": terminal["text"]})
+            yield {"type": "final_answer", "text": terminal["text"], "sources": chunks, "request_id": request_id}
+            return
+
+        # terminal["type"] == "tool_call"
+        tool_schema = mcp_registry.get_schema(terminal["tool"])
+        if tool_schema["safety"] == "needs_approval":
+            call_id = terminal.get("id") or str(uuid.uuid4())
+            await session_store.save_pending(
+                request_id,
+                {
+                    "user_id": user_id,
+                    "question": question,
+                    "messages": messages,
+                    "tool": terminal["tool"],
+                    "args": terminal["args"],
+                    "call_id": call_id,
+                    "chunks": chunks,
+                    "tools": tools,
+                },
+            )
+            yield {"type": "confirmation_required", "tool": terminal["tool"], "args": terminal["args"], "request_id": request_id}
+            return
+
+        client = mcp_registry.get_owner(terminal["tool"])
+        tool_result = await client.call_tool(terminal["tool"], terminal["args"])
+        logger.log_tool_call(request_id, terminal["tool"], terminal["args"], tool_result)
+
+        call_id = terminal.get("id") or str(uuid.uuid4())
+        messages.append({"role": "assistant", "content": "", "tool_call": {"id": call_id, "name": terminal["tool"], "args": terminal["args"]}})
+        messages.append({"role": "tool", "tool_call_id": call_id, "content": tool_result})
