@@ -1,0 +1,7 @@
+[
+  {
+    "question": "What documents do I need for UAE customs clearance?",
+    "tags": {"country": "UAE"},
+    "expected_doc_id": "ingestion/data/compliance/uae/uae_customs.pdf"
+  }
+]

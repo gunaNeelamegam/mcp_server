@@ -1,0 +1,7 @@
+[
+  {
+    "question": "duplicate void transaction bug",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/known-issues/duplicate-void-transaction.md"
+  }
+]
