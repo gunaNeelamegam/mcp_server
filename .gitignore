@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+uv.lock.bak
+
+# ingestion artifacts (raw docs + manifest are data, not code)
+ingestion/data/**/*.pdf
+ingestion/data/**/*.md
+!ingestion/data/**/.gitkeep
+ingestion/manifest.json
+
+# local vector/session stores if run on disk
+qdrant_storage/
+*.sqlite3
+
+.DS_Store
