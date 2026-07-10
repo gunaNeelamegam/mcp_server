@@ -22,7 +22,9 @@ class Role:
 ROLES: dict[str, Role] = {
     "customer": Role(
         name="customer",
-        allowed_domains=frozenset({"support-docs"}),
+        # compliance + support-docs are customer-facing; known-issues is
+        # the internal bug tracker and should never reach a customer bot.
+        allowed_domains=frozenset({"compliance", "support-docs"}),
         allowed_tools=frozenset({"getShipmentStatus"}),
     ),
     "support_agent": Role(

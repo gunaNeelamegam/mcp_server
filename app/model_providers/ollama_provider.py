@@ -1,4 +1,11 @@
-"""ModelProvider implementation backed by a local Ollama server."""
+"""ModelProvider implementation backed by a local Ollama server.
+
+Accepts the same shared internal message convention as ClaudeProvider
+(see claude_provider.py's docstring) and translates it into Ollama's
+chat API shape here, since Ollama expects plain string content plus its
+own `tool_calls` field rather than our provider-agnostic `tool_call` /
+`tool_call_id` keys.
+"""
 import json
 from collections.abc import AsyncIterator
 from typing import Any
@@ -20,6 +27,27 @@ def _to_ollama_tools(tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
         }
         for tool in tools
     ]
+
+
+def _to_ollama_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    converted: list[dict[str, Any]] = []
+    for message in messages:
+        role = message["role"]
+        if role == "assistant" and message.get("tool_call"):
+            call = message["tool_call"]
+            converted.append(
+                {
+                    "role": "assistant",
+                    "content": message.get("content", ""),
+                    "tool_calls": [{"function": {"name": call["name"], "arguments": call["args"]}}],
+                }
+            )
+        elif role == "tool":
+            content = message["content"]
+            converted.append({"role": "tool", "content": content if isinstance(content, str) else json.dumps(content)})
+        else:
+            converted.append({"role": role, "content": message["content"]})
+    return converted
 
 
 def _message_to_result(message: dict[str, Any]) -> GenerateResult:
@@ -44,7 +72,7 @@ class OllamaProvider(ModelProvider):
     ) -> GenerateResult | AsyncIterator[GenerateResult]:
         payload = {
             "model": self._chat_model,
-            "messages": messages,
+            "messages": _to_ollama_messages(messages),
             "tools": _to_ollama_tools(tools),
             "stream": stream,
         }
