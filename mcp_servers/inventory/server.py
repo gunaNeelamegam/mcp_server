@@ -73,7 +73,7 @@ async def call_tool(request: CallToolRequest) -> dict[str, Any]:
         return item
 
     if request.tool == "listLowStock":
-        threshold = request.args.get("threshold", 10)
+        threshold = int(request.args.get("threshold", 10))
         low = [
             item for item in _STOCK.values()
             if (item["quantity_on_hand"] - item["quantity_allocated"]) <= threshold
@@ -85,7 +85,7 @@ async def call_tool(request: CallToolRequest) -> dict[str, Any]:
         item = _STOCK.get(sku)
         if not item:
             raise HTTPException(404, f"No stock record found for {sku!r}")
-        item["quantity_on_hand"] += request.args.get("delta", 0)
+        item["quantity_on_hand"] += int(request.args.get("delta", 0))
         return item
 
     raise HTTPException(404, f"Unknown tool {request.tool!r}")

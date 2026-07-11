@@ -111,7 +111,7 @@ async def call_tool(request: CallToolRequest) -> dict[str, Any]:
         asn = _ASNS.get(asn_id)
         if not asn:
             raise HTTPException(404, f"No ASN found for {asn_id!r}")
-        received_by_sku = {item["sku"]: item["qty"] for item in request.args.get("received_items", [])}
+        received_by_sku = {item["sku"]: int(item["qty"]) for item in request.args.get("received_items", [])}
         fully_received = True
         for line in asn["items"]:
             line["received_qty"] += received_by_sku.get(line["sku"], 0)

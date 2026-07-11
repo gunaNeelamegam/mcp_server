@@ -8,6 +8,7 @@ from typing import Any
 from app import glossary
 from app.auth import permissions as auth
 from app.logging import request_logger as logger
+from app.mcp_clients import tool_router
 from app.mcp_clients.registry import McpRegistry
 from app.mcp_clients.registry import get_registry as get_mcp_registry
 from app.model_providers.base import ModelProvider
@@ -69,9 +70,12 @@ async def handle_question(
     history = await session_store.get_history(user_id)
     messages = [*history, {"role": "system", "content": _build_system_prompt(chunks)}, {"role": "user", "content": question}]
 
-    # 5. Only the tools this role is allowed to use
+    # 5. Only the tools this role is allowed to use, further narrowed to
+    #    the ones relevant to this question — a small local model becomes
+    #    unreliable once too many tool schemas are attached at once.
     mcp_registry = await get_mcp_registry()
     tools = auth.filter_tools(role, mcp_registry.all_tool_schemas())
+    tools = tool_router.filter_tools(tool_router.route(question), tools)
 
     # 6. Call the active model provider (swappable)
     provider = get_model_provider()
@@ -197,6 +201,7 @@ async def handle_question_stream(
 
     mcp_registry = await get_mcp_registry()
     tools = auth.filter_tools(role, mcp_registry.all_tool_schemas())
+    tools = tool_router.filter_tools(tool_router.route(question), tools)
 
     provider = get_model_provider()
     async for event in _run_loop_stream(
