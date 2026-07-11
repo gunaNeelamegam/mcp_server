@@ -35,6 +35,10 @@ class Settings(BaseSettings):
 
     # MCP servers
     shipments_mcp_url: str = "http://localhost:7001"
+    inbound_mcp_url: str = "http://localhost:7002"
+    outbound_mcp_url: str = "http://localhost:7003"
+    inventory_mcp_url: str = "http://localhost:7004"
+    returns_mcp_url: str = "http://localhost:7005"
 
     # App
     log_level: str = "INFO"

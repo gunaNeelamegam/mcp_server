@@ -25,12 +25,31 @@ ROLES: dict[str, Role] = {
         # compliance + support-docs are customer-facing; known-issues is
         # the internal bug tracker and should never reach a customer bot.
         allowed_domains=frozenset({"compliance", "support-docs"}),
-        allowed_tools=frozenset({"getShipmentStatus"}),
+        # Read-only status checks on a customer's own shipments/orders/
+        # returns only — never inbound/inventory (internal ops) and never
+        # a needs_approval tool.
+        allowed_tools=frozenset({"getShipmentStatus", "getSalesOrderStatus", "getReturnStatus"}),
     ),
     "support_agent": Role(
         name="support_agent",
         allowed_domains=_ALL_DOMAINS,
-        allowed_tools=frozenset({"getShipmentStatus", "listShipments"}),
+        # All read-only tools across every domain; write actions
+        # (updateShipmentEta, receiveAsn, allocateInventory, createPickList,
+        # adjustStock, approveReturn) stay manager-only.
+        allowed_tools=frozenset(
+            {
+                "getShipmentStatus",
+                "listShipments",
+                "getAsnStatus",
+                "listAsns",
+                "getSalesOrderStatus",
+                "listSalesOrders",
+                "getStockLevel",
+                "listLowStock",
+                "getReturnStatus",
+                "listReturns",
+            }
+        ),
     ),
     "manager": Role(
         name="manager",

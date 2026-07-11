@@ -9,6 +9,10 @@ from typing import Any
 
 from app.config import Settings, get_settings
 from app.mcp_clients.base import McpClient
+from app.mcp_clients.inbound_client import InboundMcpClient
+from app.mcp_clients.inventory_client import InventoryMcpClient
+from app.mcp_clients.outbound_client import OutboundMcpClient
+from app.mcp_clients.returns_client import ReturnsMcpClient
 from app.mcp_clients.shipments_client import ShipmentsMcpClient
 
 
@@ -32,10 +36,13 @@ class McpRegistry:
 
 
 async def _build_clients(settings: Settings) -> list[McpClient]:
-    shipments = await ShipmentsMcpClient.create(settings.shipments_mcp_url)
-    return [shipments]
-    # Adding warehouse-mcp later: append
-    #   await WarehouseMcpClient.create(settings.warehouse_mcp_url)
+    return [
+        await ShipmentsMcpClient.create(settings.shipments_mcp_url),
+        await InboundMcpClient.create(settings.inbound_mcp_url),
+        await OutboundMcpClient.create(settings.outbound_mcp_url),
+        await InventoryMcpClient.create(settings.inventory_mcp_url),
+        await ReturnsMcpClient.create(settings.returns_mcp_url),
+    ]
 
 
 _registry: McpRegistry | None = None
