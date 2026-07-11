@@ -9,16 +9,17 @@ from app.rag.vector_store import VectorStore
 # not after HybridSearch's min-max normalization — normalization rescales
 # whatever the best candidate is to the top of the range regardless of its
 # absolute similarity, so a single weak match would otherwise look as
-# "relevant" as a strong one once merged.
+# "relevant" as a strong one once merged. This matters most for small/
+# single-chunk collections, where normalization has nothing else to scale
+# against and always maps the sole hit to 1.0 regardless of magnitude.
 #
-# This only catches clearly-unrelated pairs; short same-domain sentences
-# (e.g. "shipment status" vs. "customs clearance", both logistics jargon)
-# can still land close together in embedding space, especially with a
-# small embedding model and a small per-country corpus. Real precision
-# for compliance queries comes from the country/tag filter (exact match),
-# not this threshold — treat this as a coarse floor, and re-tune it
-# against tests/rag_eval once a production-sized corpus exists.
-_MIN_SIMILARITY = 0.35
+# Calibrated empirically against nomic-embed-text (with the search_query/
+# search_document prefixes applied in OllamaEmbeddingProvider) using the
+# tests/rag_eval fixtures: true matches scored 0.82-0.85 raw cosine,
+# unrelated cross-domain/tool-only questions scored 0.41-0.62. 0.65 sits
+# in the gap between them. Re-tune against tests/rag_eval if the corpus
+# or embedding model changes.
+_MIN_SIMILARITY = 0.65
 
 
 class DenseSearch(SearchStrategy):
@@ -28,6 +29,6 @@ class DenseSearch(SearchStrategy):
         self._embedding_provider = embedding_provider
 
     async def search(self, query: str, filters: dict[str, Any], top_k: int) -> list[dict[str, Any]]:
-        [query_vector] = await self._embedding_provider.embed([query])
+        [query_vector] = await self._embedding_provider.embed([query], is_query=True)
         results = await self._vector_store.search(self._collection, query_vector, filters, top_k)
         return [r for r in results if r["score"] >= _MIN_SIMILARITY]

@@ -10,8 +10,14 @@ from abc import ABC, abstractmethod
 
 class EmbeddingProvider(ABC):
     @abstractmethod
-    async def embed(self, texts: list[str]) -> list[list[float]]:
-        """Returns one vector per input text. Must batch, not loop one-by-one."""
+    async def embed(self, texts: list[str], is_query: bool = False) -> list[list[float]]:
+        """Returns one vector per input text. Must batch, not loop one-by-one.
+
+        is_query distinguishes a search query from an indexed document chunk.
+        Some models (e.g. nomic-embed-text) are trained with different task
+        prefixes for each and produce poorly-calibrated similarity scores
+        without them — implementations that don't need the distinction can
+        ignore the flag."""
         ...
 
     @property
