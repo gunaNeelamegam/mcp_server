@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logistics AI</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel: #f7f7f8;
+    --border: #e5e5e5;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --bubble-user: #2563eb;
+    --bubble-user-text: #ffffff;
+    --bubble-assistant: #f1f1f3;
+    --bubble-assistant-text: #1a1a1a;
+    --danger: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #212121;
+      --panel: #171717;
+      --border: #333333;
+      --text: #ececec;
+      --muted: #9b9b9b;
+      --accent: #3b82f6;
+      --bubble-user: #3b82f6;
+      --bubble-user-text: #ffffff;
+      --bubble-assistant: #2f2f2f;
+      --bubble-assistant-text: #ececec;
+      --danger: #f87171;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+  }
+  header .user-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  header input {
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    width: 140px;
+  }
+  main {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+  }
+  #thread {
+    width: 100%;
+    max-width: 720px;
+    padding: 20px 16px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .row { display: flex; }
+  .row.user { justify-content: flex-end; }
+  .row.assistant { justify-content: flex-start; }
+  .bubble {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    white-space: pre-wrap;
+    line-height: 1.45;
+    font-size: 14.5px;
+  }
+  .row.user .bubble {
+    background: var(--bubble-user);
+    color: var(--bubble-user-text);
+    border-bottom-right-radius: 4px;
+  }
+  .row.assistant .bubble {
+    background: var(--bubble-assistant);
+    color: var(--bubble-assistant-text);
+    border-bottom-left-radius: 4px;
+  }
+  .row.assistant .bubble:empty::after {
+    content: "...";
+    opacity: 0.5;
+  }
+  .sources {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .sources summary { cursor: pointer; }
+  .sources .chunk {
+    margin-top: 6px;
+    padding: 6px 8px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .confirm-box {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel);
+    font-size: 13.5px;
+  }
+  .confirm-box .headline {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .confirm-box pre {
+    margin: 6px 0;
+    font-size: 12px;
+    white-space: pre-wrap;
+    color: var(--muted);
+  }
+  .confirm-box .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .confirm-box button {
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+  }
+  .confirm-box .approve { background: var(--accent); color: white; }
+  .confirm-box .deny { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  .confirm-box.resolved .actions { display: none; }
+  .confirm-box .resolution { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: center;
+  }
+  #composer {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    gap: 8px;
+  }
+  #question {
+    flex: 1;
+    resize: none;
+    font-family: inherit;
+    font-size: 14.5px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    max-height: 160px;
+  }
+  #send {
+    padding: 0 18px;
+    border-radius: 12px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  #send:disabled { opacity: 0.5; cursor: default; }
+  .error-text { color: var(--danger); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Logistics AI</h1>
+  <div class="user-field">
+    <label for="user-id">user_id</label>
+    <input id="user-id" type="text" value="demo-user">
+  </div>
+</header>
+<main><div id="thread"></div></main>
+<footer>
+  <form id="composer">
+    <textarea id="question" rows="1" placeholder="Ask about a shipment, ASN, sales order, stock level, return..."></textarea>
+    <button id="send" type="submit">Send</button>
+  </form>
+</footer>
+<script>
+const thread = document.getElementById('thread');
+const form = document.getElementById('composer');
+const questionEl = document.getElementById('question');
+const sendBtn = document.getElementById('send');
+const userIdEl = document.getElementById('user-id');
+
+userIdEl.value = localStorage.getItem('logistics_user_id') || 'demo-user';
+userIdEl.addEventListener('change', () => localStorage.setItem('logistics_user_id', userIdEl.value));
+
+function scrollToBottom() {
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+function appendRow(role) {
+  const row = document.createElement('div');
+  row.className = 'row ' + role;
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  row.appendChild(bubble);
+  thread.appendChild(row);
+  scrollToBottom();
+  return { row, bubble };
+}
+
+function renderSources(row, sources) {
+  if (!sources || sources.length === 0) return;
+  const details = document.createElement('details');
+  details.className = 'sources';
+  const summary = document.createElement('summary');
+  summary.textContent = `${sources.length} source${sources.length > 1 ? 's' : ''}`;
+  details.appendChild(summary);
+  for (const s of sources) {
+    const div = document.createElement('div');
+    div.className = 'chunk';
+    div.textContent = `[${s.domain}:${s.doc_id}] ${s.text}`;
+    details.appendChild(div);
+  }
+  row.appendChild(details);
+}
+
+function renderConfirmation(row, event, userId) {
+  const box = document.createElement('div');
+  box.className = 'confirm-box';
+  const headline = document.createElement('div');
+  headline.className = 'headline';
+  headline.textContent = `Confirm action: ${event.tool}`;
+  box.appendChild(headline);
+  const pre = document.createElement('pre');
+  pre.textContent = JSON.stringify(event.args, null, 2);
+  box.appendChild(pre);
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  const approve = document.createElement('button');
+  approve.className = 'approve';
+  approve.textContent = 'Approve';
+  const deny = document.createElement('button');
+  deny.className = 'deny';
+  deny.textContent = 'Deny';
+  actions.appendChild(approve);
+  actions.appendChild(deny);
+  box.appendChild(actions);
+  row.appendChild(box);
+  scrollToBottom();
+
+  async function resolve(approved) {
+    box.classList.add('resolved');
+    const resolution = document.createElement('div');
+    resolution.className = 'resolution';
+    resolution.textContent = approved ? 'Approved — running...' : 'Denied.';
+    box.appendChild(resolution);
+    try {
+      const res = await fetch('/chat/confirm', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          request_id: event.request_id,
+          tool: event.tool,
+          args: event.args,
+          approved,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const result = await res.json();
+      resolution.remove();
+      handleFinalResult(row, result, userId);
+    } catch (err) {
+      resolution.textContent = `Error resuming after confirmation: ${err.message}`;
+      resolution.classList.add('error-text');
+    }
+  }
+
+  approve.addEventListener('click', () => resolve(true));
+  deny.addEventListener('click', () => resolve(false));
+}
+
+function handleFinalResult(row, result, userId) {
+  if (result.type === 'confirmation_required') {
+    renderConfirmation(row, result, userId);
+    return;
+  }
+  // final_answer
+  const bubble = row.querySelector('.bubble');
+  if (!bubble.textContent) bubble.textContent = result.text;
+  renderSources(row, result.sources);
+  scrollToBottom();
+}
+
+async function streamChat(question, userId) {
+  const { row, bubble } = appendRow('assistant');
+  const res = await fetch('/chat', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ user_id: userId, question, stream: true }),
+  });
+  if (!res.ok || !res.body) {
+    bubble.textContent = `Error: HTTP ${res.status}`;
+    bubble.classList.add('error-text');
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split('\n\n');
+    buffer = parts.pop();
+    for (const part of parts) {
+      if (!part.startsWith('data: ')) continue;
+      const event = JSON.parse(part.slice(6));
+      if (event.type === 'text_delta') {
+        bubble.textContent += event.text;
+        scrollToBottom();
+      } else if (event.type === 'final_answer') {
+        if (!bubble.textContent) bubble.textContent = event.text;
+        renderSources(row, event.sources);
+      } else if (event.type === 'confirmation_required') {
+        renderConfirmation(row, event, userId);
+      }
+    }
+  }
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const question = questionEl.value.trim();
+  if (!question) return;
+  const userId = userIdEl.value.trim() || 'demo-user';
+  appendRow('user').bubble.textContent = question;
+  questionEl.value = '';
+  questionEl.style.height = 'auto';
+  sendBtn.disabled = true;
+  try {
+    await streamChat(question, userId);
+  } catch (err) {
+    const { bubble } = appendRow('assistant');
+    bubble.textContent = `Error: ${err.message}`;
+    bubble.classList.add('error-text');
+  } finally {
+    sendBtn.disabled = false;
+    questionEl.focus();
+  }
+});
+
+questionEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    form.requestSubmit();
+  }
+});
+
+questionEl.addEventListener('input', () => {
+  questionEl.style.height = 'auto';
+  questionEl.style.height = Math.min(questionEl.scrollHeight, 160) + 'px';
+});
+</script>
+</body>
+</html>
