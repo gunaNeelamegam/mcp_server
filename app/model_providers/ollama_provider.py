@@ -85,10 +85,17 @@ class OllamaProvider(ModelProvider):
         return self._stream(payload)
 
     async def _stream(self, payload: dict[str, Any]) -> AsyncIterator[GenerateResult]:
+        # Ollama delivers a tool call as a complete tool_calls array on its
+        # own chunk (done: false) BEFORE the terminal done: true chunk —
+        # it is not repeated on the terminal chunk. Must be captured as it
+        # streams by; checking only the done: true chunk (as an earlier
+        # version of this code did) always misses it and silently falls
+        # through to an empty final_answer.
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             async with client.stream("POST", f"{self._base_url}/api/chat", json=payload) as response:
                 response.raise_for_status()
                 accumulated = ""
+                captured_tool_calls: list[dict[str, Any]] = []
                 async for line in response.aiter_lines():
                     if not line:
                         continue
@@ -98,10 +105,12 @@ class OllamaProvider(ModelProvider):
                     if delta:
                         accumulated += delta
                         yield {"type": "text_delta", "text": delta}
+                    tool_calls = message.get("tool_calls")
+                    if tool_calls:
+                        captured_tool_calls = tool_calls
                     if chunk.get("done"):
-                        tool_calls = message.get("tool_calls") or []
-                        if tool_calls:
-                            call = tool_calls[0]["function"]
+                        if captured_tool_calls:
+                            call = captured_tool_calls[0]["function"]
                             yield {"type": "tool_call", "tool": call["name"], "args": call.get("arguments", {})}
                         else:
                             yield {"type": "final_answer", "text": accumulated}
