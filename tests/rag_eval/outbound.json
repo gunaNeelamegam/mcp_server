@@ -1,0 +1,32 @@
+[
+  {
+    "question": "How does sales order inventory allocation work?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/outbound/allocation-rules.md"
+  },
+  {
+    "question": "How are pick lists generated for warehouse picking?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/outbound/pick-list-generation.md"
+  },
+  {
+    "question": "How are backorders filled once stock arrives?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/outbound/backorder-handling.md"
+  },
+  {
+    "question": "How do I split an order across multiple shipments?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/outbound/split-shipment.md"
+  },
+  {
+    "question": "What is the cutoff time for same-day order fulfillment?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/outbound/fulfillment-cutoff-policy.md"
+  },
+  {
+    "question": "What do I do when a picker can't find the full quantity for a short-pick?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/outbound/short-pick-handling.md"
+  }
+]

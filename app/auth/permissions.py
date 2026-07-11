@@ -9,7 +9,9 @@ the codebase needs to change since callers only ever see a Role.
 from dataclasses import dataclass
 from typing import Any
 
-_ALL_DOMAINS = frozenset({"compliance", "support-docs", "known-issues"})
+_ALL_DOMAINS = frozenset(
+    {"compliance", "support-docs", "known-issues", "inbound", "outbound", "inventory", "returns"}
+)
 
 
 @dataclass(frozen=True)

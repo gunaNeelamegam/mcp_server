@@ -35,4 +35,28 @@ DOMAINS: dict[str, DomainConfig] = {
         data_dir="ingestion/data/known-issues",
         file_types=(".md", ".txt"),
     ),
+    "inbound": DomainConfig(
+        name="inbound",
+        collection="inbound_docs",
+        data_dir="ingestion/data/inbound",
+        file_types=(".md", ".txt"),
+    ),
+    "outbound": DomainConfig(
+        name="outbound",
+        collection="outbound_docs",
+        data_dir="ingestion/data/outbound",
+        file_types=(".md", ".txt"),
+    ),
+    "inventory": DomainConfig(
+        name="inventory",
+        collection="inventory_docs",
+        data_dir="ingestion/data/inventory",
+        file_types=(".md", ".txt"),
+    ),
+    "returns": DomainConfig(
+        name="returns",
+        collection="returns_docs",
+        data_dir="ingestion/data/returns",
+        file_types=(".md", ".txt"),
+    ),
 }

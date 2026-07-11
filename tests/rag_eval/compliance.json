@@ -3,5 +3,45 @@
     "question": "What documents do I need for UAE customs clearance?",
     "tags": {"country": "UAE"},
     "expected_doc_id": "ingestion/data/compliance/uae/uae_customs.pdf"
+  },
+  {
+    "question": "What items are banned from import into the UAE?",
+    "tags": {"country": "UAE"},
+    "expected_doc_id": "ingestion/data/compliance/uae/uae_prohibited_items.pdf"
+  },
+  {
+    "question": "What certification is required for electronics imported into the UAE?",
+    "tags": {"country": "UAE"},
+    "expected_doc_id": "ingestion/data/compliance/uae/uae_certification.pdf"
+  },
+  {
+    "question": "What is the customs duty rate in Saudi Arabia?",
+    "tags": {"country": "KSA"},
+    "expected_doc_id": "ingestion/data/compliance/ksa/ksa_duty_rates.pdf"
+  },
+  {
+    "question": "What certification do electronics need to clear customs in Saudi Arabia?",
+    "tags": {"country": "KSA"},
+    "expected_doc_id": "ingestion/data/compliance/ksa/ksa_saso_certification.pdf"
+  },
+  {
+    "question": "What items are prohibited from import into Saudi Arabia?",
+    "tags": {"country": "KSA"},
+    "expected_doc_id": "ingestion/data/compliance/ksa/ksa_prohibited_items.pdf"
+  },
+  {
+    "question": "How does temporary import work for exhibition equipment in Qatar?",
+    "tags": {"country": "QATAR"},
+    "expected_doc_id": "ingestion/data/compliance/qatar/qatar_temporary_import.pdf"
+  },
+  {
+    "question": "What is prohibited from import into Qatar?",
+    "tags": {"country": "QATAR"},
+    "expected_doc_id": "ingestion/data/compliance/qatar/qatar_prohibited_items.pdf"
+  },
+  {
+    "question": "What documents are required for customs clearance in Qatar?",
+    "tags": {"country": "QATAR"},
+    "expected_doc_id": "ingestion/data/compliance/qatar/qatar_customs_clearance.pdf"
   }
 ]

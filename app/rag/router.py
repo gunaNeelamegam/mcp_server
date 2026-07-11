@@ -15,6 +15,31 @@ _SUPPORT_KEYWORDS = (
     "fails", "failing", "crash", "stuck", "reset",
 )
 
+# These use deliberately specific, multi-word "policy/process" phrasing
+# rather than bare entity nouns ("return", "rma", "stock") — a bare noun
+# would also match a live-data tool question like "status of return
+# RMA4001", and RAG confidently matching with zero hits short-circuits
+# the request into a refusal before the tool-calling step ever runs
+# (see expected_domain_but_no_hits). Keep new domain keywords narrow.
+_INBOUND_KEYWORDS = (
+    "asn receiving", "advance shipping notice", "receiving process", "cross-dock",
+    "cross dock", "inbound dock", "supplier submission", "quality inspection hold",
+    "short-shipped", "over-received", "over received", "putaway",
+)
+_OUTBOUND_KEYWORDS = (
+    "pick list", "picking process", "packing guideline", "cartonization", "backorder",
+    "fulfillment cutoff", "allocation rule", "allocation policy", "split shipment",
+    "short-pick", "short pick",
+)
+_INVENTORY_KEYWORDS = (
+    "cycle count", "stock adjustment", "negative stock", "bin location",
+    "reconciliation", "safety stock", "reorder policy", "quarantine", "lost inventory",
+)
+_RETURNS_KEYWORDS = (
+    "rma approval", "return policy", "restocking", "refund policy", "return fraud",
+    "return receiving", "aged rma", "return shipping label", "exchange policy",
+)
+
 
 @dataclass(frozen=True)
 class RoutingDecision:
@@ -36,6 +61,14 @@ def route(question: str, tags: dict[str, Any] | None = None) -> RoutingDecision:
     if any(keyword in q for keyword in _SUPPORT_KEYWORDS):
         domains.add("support-docs")
         domains.add("known-issues")
+    if any(keyword in q for keyword in _INBOUND_KEYWORDS):
+        domains.add("inbound")
+    if any(keyword in q for keyword in _OUTBOUND_KEYWORDS):
+        domains.add("outbound")
+    if any(keyword in q for keyword in _INVENTORY_KEYWORDS):
+        domains.add("inventory")
+    if any(keyword in q for keyword in _RETURNS_KEYWORDS):
+        domains.add("returns")
 
     if domains:
         return RoutingDecision(domains=list(domains), confident=True)

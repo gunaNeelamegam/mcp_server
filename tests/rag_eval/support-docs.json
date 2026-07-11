@@ -3,5 +3,40 @@
     "question": "how do I reset a stuck shift",
     "tags": {},
     "expected_doc_id": "ingestion/data/support-docs/reset-stuck-shift.md"
+  },
+  {
+    "question": "How do I reprint a lost delivery note?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/support-docs/reprint-delivery-note.md"
+  },
+  {
+    "question": "How do I reassign a driver whose vehicle broke down mid-route?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/support-docs/reassign-driver.md"
+  },
+  {
+    "question": "What do I do if a cash on delivery payment wasn't actually collected?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/support-docs/failed-cod-payment.md"
+  },
+  {
+    "question": "How do I escalate a shipment that's been stuck in customs hold?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/support-docs/escalate-customs-hold.md"
+  },
+  {
+    "question": "What do I do when a warehouse scanner won't read a barcode?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/support-docs/barcode-scan-failure.md"
+  },
+  {
+    "question": "How do I merge two duplicate customer profiles?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/support-docs/merge-duplicate-customers.md"
+  },
+  {
+    "question": "A driver's app is stuck offline and won't sync, what do I do?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/support-docs/driver-app-offline-sync.md"
   }
 ]

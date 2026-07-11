@@ -1,0 +1,32 @@
+[
+  {
+    "question": "How does the cycle count process work?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inventory/cycle-count-process.md"
+  },
+  {
+    "question": "What do I do about negative stock showing on a SKU?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inventory/negative-stock-handling.md"
+  },
+  {
+    "question": "What does a bin location code like DXB-A1 mean?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inventory/bin-location-naming.md"
+  },
+  {
+    "question": "How is safety stock calculated for a SKU?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inventory/safety-stock-policy.md"
+  },
+  {
+    "question": "What do I do if inventory is missing with no explanation in the transaction history?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inventory/lost-inventory-investigation.md"
+  },
+  {
+    "question": "How does the automatic reorder policy work?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inventory/reorder-policy.md"
+  }
+]

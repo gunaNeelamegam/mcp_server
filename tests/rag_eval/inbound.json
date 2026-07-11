@@ -1,0 +1,32 @@
+[
+  {
+    "question": "How does the ASN receiving process work?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inbound/asn-receiving-process.md"
+  },
+  {
+    "question": "What do I do if an ASN arrives short-shipped?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inbound/short-shipped-asn.md"
+  },
+  {
+    "question": "How do I flag a damaged item found during inbound receiving?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inbound/damaged-inbound-goods.md"
+  },
+  {
+    "question": "What is the policy for scheduling an inbound dock appointment?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inbound/inbound-dock-scheduling.md"
+  },
+  {
+    "question": "What happens during a quality inspection hold on receiving?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inbound/quality-inspection-hold.md"
+  },
+  {
+    "question": "What are the ASN submission requirements for suppliers?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/inbound/supplier-asn-submission.md"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "question": "What is the RMA approval policy?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/returns/rma-approval-policy.md"
+  },
+  {
+    "question": "How is it decided whether a returned item is restocked or disposed of?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/returns/restocking-vs-disposal.md"
+  },
+  {
+    "question": "What's the difference between a refund and an exchange for a return?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/returns/refund-vs-exchange-policy.md"
+  },
+  {
+    "question": "What are the red flags for return fraud?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/returns/return-fraud-indicators.md"
+  },
+  {
+    "question": "What happens to an RMA that's approved but never shipped back?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/returns/aged-rma-handling.md"
+  },
+  {
+    "question": "What is the return shipping label policy?",
+    "tags": {},
+    "expected_doc_id": "ingestion/data/returns/return-shipping-label-policy.md"
+  }
+]
