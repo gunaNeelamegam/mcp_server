@@ -6,10 +6,19 @@ Necessary because small local models become unreliable once too many
 tool schemas are attached to a single call: confirmed live that
 llama3.2:3b calls the correct tool reliably when only the relevant one
 is offered, but with all tools attached it sometimes hallucinates an
-unrelated tool call (e.g. for a plain "hi") and sometimes returns an
-empty answer instead of calling the obviously-relevant tool. Narrowing
-the tool list before it reaches the model fixes the root cause instead
-of retrying or switching providers.
+unrelated tool call and sometimes returns an empty answer instead of
+calling the obviously-relevant tool.
+
+Unlike app.rag.router (which falls back to searching every domain when
+ambiguous — cheap and safe, since irrelevant RAG hits are just noise
+filtered out by a relevance threshold), an ambiguous question here
+falls back to offering NO tools. Confirmed live: a plain "hi" with all
+16 tools attached made the model call getShipmentStatus with a
+fabricated tracking ID (TRK1001) it invented out of thin air and
+present the fake result as a real answer. A wrong tool call that
+fabricates arguments and states the result as fact is worse than no
+tool call at all — the model should ask a clarifying question or
+answer in plain text instead of guessing.
 """
 import re
 from dataclasses import dataclass
@@ -46,9 +55,9 @@ _KEYWORDS: dict[str, tuple[str, ...]] = {
 @dataclass(frozen=True)
 class ToolRoutingDecision:
     groups: frozenset[str]
-    # False when nothing matched and we fell back to offering every
-    # group speculatively (e.g. genuinely ambiguous small talk) — mirrors
-    # app.rag.router.RoutingDecision.confident.
+    # False when nothing matched — genuinely ambiguous or plain chat, so
+    # NO tools are offered at all (see module docstring for why this
+    # differs from the RAG router's "search everything" fallback).
     confident: bool
 
 
@@ -66,7 +75,7 @@ def route(question: str) -> ToolRoutingDecision:
 
     if groups:
         return ToolRoutingDecision(groups=frozenset(groups), confident=True)
-    return ToolRoutingDecision(groups=frozenset(_TOOL_GROUPS), confident=False)
+    return ToolRoutingDecision(groups=frozenset(), confident=False)
 
 
 def filter_tools(decision: ToolRoutingDecision, tools: list[dict[str, Any]]) -> list[dict[str, Any]]:

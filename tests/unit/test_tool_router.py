@@ -32,10 +32,14 @@ def test_keyword_routes_without_an_id():
     assert "inventory" in decision.groups
 
 
-def test_ambiguous_question_falls_back_to_every_group():
+def test_ambiguous_question_offers_no_groups():
+    # Offering everything on an ambiguous question let the model fabricate
+    # a tracking ID for a plain "hi" and present the made-up result as
+    # real — confirmed live. No tools is the safe fallback here, unlike
+    # the RAG router's "search everything" (see module docstring).
     decision = tool_router.route("hi")
     assert not decision.confident
-    assert decision.groups == frozenset(tool_router._TOOL_GROUPS)
+    assert decision.groups == frozenset()
 
 
 def test_filter_tools_narrows_to_matched_group_only():
@@ -45,10 +49,10 @@ def test_filter_tools_narrows_to_matched_group_only():
     assert names == {"getReturnStatus", "listReturns", "approveReturn"}
 
 
-def test_filter_tools_ambiguous_question_keeps_every_known_tool():
+def test_filter_tools_ambiguous_question_drops_every_known_tool():
     decision = tool_router.route("hi")
     filtered = tool_router.filter_tools(decision, _ALL_TOOLS)
-    assert {t["name"] for t in filtered} == {t["name"] for t in _ALL_TOOLS}
+    assert filtered == []
 
 
 def test_filter_tools_never_hides_an_unclassified_tool():
