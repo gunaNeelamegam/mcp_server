@@ -42,7 +42,10 @@ class Settings(BaseSettings):
 
     # App
     log_level: str = "INFO"
-    request_timeout_seconds: int = 60
+    # Confirmed live: a multi-chunk RAG context + tool schemas can push
+    # local CPU inference past 60s. This is a safety margin on top of
+    # the top_k reduction in app/rag/base.py, not a substitute for it.
+    request_timeout_seconds: int = 180
 
 
 @lru_cache

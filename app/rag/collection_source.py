@@ -12,7 +12,7 @@ class CollectionRagSource(RagSource):
         self._domain = domain
         self._search_strategy = search_strategy
 
-    async def search(self, query: str, filters: dict[str, Any], top_k: int = 5) -> list[dict[str, Any]]:
+    async def search(self, query: str, filters: dict[str, Any], top_k: int = 3) -> list[dict[str, Any]]:
         results = await self._search_strategy.search(query, filters, top_k)
         return [
             {
