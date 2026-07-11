@@ -15,9 +15,22 @@ from app.rag.vector_store import VectorStore
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
+# Confirmed live: without this, "how are you" against a support-docs
+# corpus full of "How to..."/"How do I..." articles scored positive BM25
+# matches purely on "how"/"are"/"you" and got merged into the model's
+# context as fake "relevant" documentation for a plain greeting — the
+# same class of bug _MIN_SIMILARITY fixed on the dense side, but the
+# keyword side had `score > 0` as its only floor, no stopword filtering
+# at all, so any shared common word was enough to pass.
+_STOPWORDS = frozenset(
+    "a an the this that these those is are was were be been being to of "
+    "in on at for with and or but not no as it its i you he she they we "
+    "do does did will would can could should may might have has had how".split()
+)
+
 
 def _tokenize(text: str) -> list[str]:
-    return _TOKEN_RE.findall(text.lower())
+    return [token for token in _TOKEN_RE.findall(text.lower()) if token not in _STOPWORDS]
 
 
 class KeywordSearch(SearchStrategy):
