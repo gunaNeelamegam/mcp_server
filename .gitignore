@@ -18,3 +18,6 @@ qdrant_storage/
 *.sqlite3
 
 .DS_Store
+
+# make up / mcp-up runtime state (PID files, MCP server logs)
+.run/
